@@ -3,6 +3,7 @@ from uuid import uuid4
 import sqlite3
 import os
 from FDataBase import FDataBase
+from pathlib import Path
 
 from lti_module.check_request import check_request
 from lti_module import utils
@@ -82,6 +83,7 @@ def get_user_solution(solution_id):
 @app.route('/lti', methods=['POST'])
 def lti_route():
 	params = request.form	#извлечение информации из запроса (все что дала нам lms)
+	print('Путь к бд: ', os.path.join(Path.cwd(), "database.db"), '\n')	
 	consumer_secret = dbase.get_secret(params.get('oauth_consumer_key', ''))
 	request_info = dict( 
 		headers=dict(request.headers),

@@ -2,12 +2,6 @@ import sqlite3
 import os
 from pathlib import Path
 from flask import g
-
-""" SESSIONS = {}	#хранение какой-то информации о пользователе и ее дальнейшее использование
-SOLUTIONS = {}	#решения пользователей в системе
-CONSUMERS = {
-	'timestamp_and_nonce': []
-} """
 		
 class FDataBase():
 	__instance = None
@@ -23,15 +17,22 @@ class FDataBase():
 		return cls.__instance
 
 	def __del__(self):			#деструктор
+		self.__db.close()	#******
+		self.__cur.close()	#******
 		FDataBase.__instance = None
 
 	#общая функция для установаления соединения с базой данных
 	def connect_db(self):
-		#методу connect передаем путь, в котором расположена бд
-		conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"))
-		#чтобы записи в бд были представлены не в виде кортежей, а в виде словаря
-		#conn.row_factory = sqlite3.Row		
-		return conn	#возвращает установленное соединение
+		try:
+			#Объект connection не является потокобезопасным. 
+			# Модуль sqlite3 не позволяет делиться подключением между потоками. 
+			# Если попытаться сделать это, то можно получить исключение.
+			#методу connect передаем путь, в котором расположена бд
+			conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"))	# (check_same_thread=False ??)
+			return conn	#возвращает установленное соединение
+		except sqlite3.Error as e:
+			print('Ошибка подключение к бд: \n' + str(e))
+			return False
 
 	#установление соединения
 	def get_db(self):
@@ -41,17 +42,20 @@ class FDataBase():
 		return g.link_db
 
 	def __init__(self):		#конструктор
+		#if self.__db is None or self.__cur is None:
 		db = self.get_db()
 		self.__db = db
+		#cursor не является потокобезопасным. Модуль не позволяет делиться объектами cursor между потоками. 
+		# Если это сделать, то будет ошибка.
 		self.__cur = db.cursor()
 
-	def is_key_valid(self, key):
+	def is_key_valid(self, key):	#*****************************
 		try:
 			self.__cur.execute("SELECT key from keysecret")
 			res = self.__cur.fetchone()
 			return res[0] == key
 		except sqlite3.Error as e:
-			print("Ошибка проверки валидации ключа "+str(e))
+			print("Ошибка проверки валидации ключа: \n" + str(e))
 			return False
 
 	def get_secret(self, key):		
@@ -61,7 +65,7 @@ class FDataBase():
 				res = self.__cur.fetchone()
 				return res[0]
 			except sqlite3.Error as e:
-				print("Ошибка взятия секрета "+str(e))
+				print("Ошибка получения секрета: \n" + str(e))
 				return False
 
 	def add_user(self, user_id, name, email):
@@ -87,7 +91,6 @@ class FDataBase():
 				return False
 		if (res): 
 			res = res[-1]
-			#SESSIONS[session_id] = {
 			self.SESSIONS[session_id] = {
 				'tasks': {
 					res[0]: {	#task
@@ -100,7 +103,6 @@ class FDataBase():
 				}, 
 				'admin': res[4]	#admin
 			}
-		#return SESSIONS.get(session_id, {})
 		return self.SESSIONS.get(session_id, {})
 
 	def add_session(self, session_id, task, passback_params, admin=False): 
@@ -141,7 +143,6 @@ class FDataBase():
 				print("Ошибка выборки решений в БД:\n " + str(e) + '\n')
 				return False
 		if(res):
-			#SOLUTIONS[solution_id] = {
 			self.SOLUTIONS[solution_id] = {
 				'_id': solution_id,
 				'userid': res[0],
@@ -154,7 +155,6 @@ class FDataBase():
 				},
 				'is_passbacked': res[6]
 			}
-		#return SOLUTIONS.get(solution_id, {})
 		return self.SOLUTIONS.get(solution_id, {})
 
 	def add_solution(self, solution_id, user_id, task_id, score, passback_params, is_passbacked=False):
@@ -209,27 +209,22 @@ class FDataBase():
 				return self.SOLUTIONS[solution_id]
 
 	def set_passbacked_flag(self, solution_id, flag):		
-		#SOLUTIONS[solution_id]['is_passbacked'] = flag
 		self.SOLUTIONS[solution_id]['is_passbacked'] = flag
 		try:
 			self.__cur.execute("UPDATE solutions SET is_passbacked = ? WHERE solution_id = ?", (flag, solution_id))
 			self.__db.commit()
 			print('flag изменен\n')
 		except sqlite3.Error as e:
-			print("Ошибка смены отправки в БД:\n " + str(e) + '\n')
+			print("Ошибка смена флага отправки в БД:\n " + str(e) + '\n')
 			return False
 
 	def has_timestamp_and_nonce(self, key, timestamp, nonce):
 		if(self.is_key_valid(key)):
-			#return (timestamp, nonce) in CONSUMERS['timestamp_and_nonce']
 			return (timestamp, nonce) in self.CONSUMERS['timestamp_and_nonce']
 
 	def add_timestamp_and_nonce(self, key, timestamp, nonce):
 		if(self.is_key_valid(key)):
-			#CONSUMERS['timestamp_and_nonce'].append((timestamp, nonce))
 			self.CONSUMERS['timestamp_and_nonce'].append((timestamp, nonce))
-			#print('CONSUMERS:\n', CONSUMERS,'\n')
-			print('CONSUMERS:\n', self.CONSUMERS,'\n')
 
 	# парсинг данных из passback_params (из строки в словарь)
 	def parsing_passback_params(self, passback_params):
