@@ -37,11 +37,12 @@ def before_request():
 	dbase = FDataBase()
 
 #разрыв соединения
-@app.teardown_appcontext
+""" @app.teardown_appcontext
 def close_db(error):
 	#Закрываем соединение с БД, если оно было установлено
 	if hasattr(g, 'link_db'):
 		g.link_db.close()
+		print('-------соединения с бд закрыто-------- from main', '\n') """
 
 """ @app.route('/', methods=['GET'])
 def index_test():
@@ -83,7 +84,6 @@ def get_user_solution(solution_id):
 @app.route('/lti', methods=['POST'])
 def lti_route():
 	params = request.form	#извлечение информации из запроса (все что дала нам lms)
-	print('Путь к бд: ', os.path.join(Path.cwd(), "database.db"), '\n')	
 	consumer_secret = dbase.get_secret(params.get('oauth_consumer_key', ''))
 	request_info = dict( 
 		headers=dict(request.headers),

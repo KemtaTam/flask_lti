@@ -5,6 +5,7 @@ from flask import g
 		
 class FDataBase():
 	__instance = None
+	__db = None
 	SESSIONS = {}	#хранение какой-то информации о пользователе и ее дальнейшее использование
 	SOLUTIONS = {}	#решения пользователей в системе
 	CONSUMERS = {
@@ -19,6 +20,7 @@ class FDataBase():
 	def __del__(self):			#деструктор
 		self.__db.close()	#******
 		self.__cur.close()	#******
+		print('-------соединения с бд закрыто-------- from FDataBase', '\n')
 		FDataBase.__instance = None
 
 	#общая функция для установаления соединения с базой данных
@@ -28,7 +30,8 @@ class FDataBase():
 			# Модуль sqlite3 не позволяет делиться подключением между потоками. 
 			# Если попытаться сделать это, то можно получить исключение.
 			#методу connect передаем путь, в котором расположена бд
-			conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"))	# (check_same_thread=False ??)
+			conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"), check_same_thread=False)	# *************************
+			print('Путь к бд: ', os.path.join(Path.cwd(), "database.db"), '\n')	
 			return conn	#возвращает установленное соединение
 		except sqlite3.Error as e:
 			print('Ошибка подключение к бд: \n' + str(e))
@@ -42,12 +45,12 @@ class FDataBase():
 		return g.link_db
 
 	def __init__(self):		#конструктор
-		#if self.__db is None or self.__cur is None:
-		db = self.get_db()
-		self.__db = db
+		if self.__db is None:		#********************
+			db = self.get_db()
+			self.__db = db
 		#cursor не является потокобезопасным. Модуль не позволяет делиться объектами cursor между потоками. 
 		# Если это сделать, то будет ошибка.
-		self.__cur = db.cursor()
+			self.__cur = db.cursor()
 
 	def is_key_valid(self, key):	#*****************************
 		try:
