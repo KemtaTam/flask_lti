@@ -85,6 +85,24 @@ class FDataBase():
 			return False
 		return True
 
+	def get_user_attempts(self, user_id):
+		try:
+			self.__cur.execute(f"SELECT attempts from users WHERE user_id LIKE '{user_id}'")
+			res = self.__cur.fetchone()
+			return res[0]
+		except sqlite3.Error as e:
+			print("Ошибка получения количества попыток юзера в БД:\n " + str(e) + '\n')
+			return False
+
+	def update_user_attempts(self, user_id):
+		attempts = self.get_user_attempts(user_id) - 1 
+		try:
+			self.__cur.execute(f"UPDATE users SET attempts='{attempts}' WHERE user_id='{user_id}'")
+			self.__db.commit()
+		except sqlite3.Error as e:
+			print("Ошибка обновления попыток в БД:\n " + str(e) + '\n')
+			return False
+
 	def get_session(self, session_id): 	
 		try:
 			self.__cur.execute("SELECT task, lis_outcome_service_url, lis_result_sourcedid, oauth_consumer_key, admin \

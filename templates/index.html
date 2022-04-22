@@ -1,22 +1,9 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-	<link rel="preconnect" href="https://fonts.gstatic.com">
-	<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500&display=swap" rel="stylesheet">
+{% extends 'base.html' %}
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="{{ url_for('static', filename='mask/dist/jquery.maskedinput.js') }}"></script>
-	
-	<title>Построение таблицы переходов-выходов автомата, заданного графом переходов</title>
-</head>
-
-<body>
+{% block content %}
 	<div class="inner">
 		<header><b>{{name}}, заполните таблицу переходов-выходов автомата по заданной схеме, удалите недостижимые состояния</b></header>
-	
+
 		<div class="wrapper">
 			<canvas class="canvas" width="500px" height="270px"></canvas>
 			<div class="wrapper__el">
@@ -39,28 +26,9 @@
 				<button class="end_button" type="submit" title="Отправить ответ на платформу">Отправить ответ</button>
 			</div>
 		</form>
-
-		<!-- <div class="pop-up1">
-			<div class="body_pop-up">
-				<div class="text1">
-					<h1 class="modals_header">Верно!</h1><br/>
-					<div class="bOk"><button id="bOk1" class="butOk" type="button">ОК</button></div>
-				</div>
-			</div>
-		</div>
-		<div class="pop-up2">
-			<div class="body_pop-up">
-				<div class="text2">
-					<h1 class="modals_header">Неверно! Попробуйте еще раз.</h1><br/>
-					<div class="bOk"><button id="bOk2" class="butOk" type="button">ОК</button></div>
-				</div>
-			</div>
-		</div> -->
 	</div>
-
-	<script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
-</body>
-</html>
+	{{super()}}
+{% endblock %}
 
 
 

@@ -243,11 +243,7 @@ if(num == 1){
 	$('.valueOfTable').mask('99/9', {placeholder: "_"});
 }
 
-let popup1 = document.getElementsByClassName("pop-up1")[0];
-let popup2 = document.getElementsByClassName("pop-up2")[0];
 let end_button = document.getElementsByClassName("end_button")[0];
-let bOk1 = document.getElementById("bOk1");
-let bOk2 = document.getElementById("bOk2");
 let answer_ = document.getElementsByName("answer")[0];	
 
 //событие нажата кнопка "отправить ответ"
@@ -258,17 +254,13 @@ function retrieveInputValue(event)
 
 	//сравниваю два массива
 	if (isEqual(answer[num].ans, getUserAnswer()) && checkDelCol()) {
-		popup1.style.display = "block";
 		answer_.value = '1';								
 	}
 	else {
-		popup2.style.display = "block";
 		answer_.value = '0.5';								
 	}
 }
 tableForm.addEventListener('submit', retrieveInputValue);
-bOk1.onclick = function () { popup1.style.display = "none"; }
-bOk2.onclick = function () { popup2.style.display = "none"; }
 
 //проверка удалены ли ненужные столбцы
 function checkDelCol()

@@ -1,23 +1,42 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500&display=swap" rel="stylesheet">
+	
+	<title>Решение</title>
+</head>
 
-{% block content %}
+<body>
 	{% if solution['score'] == "1" %}
-		<div class="pop-up1">
-			<div class="body_pop-up">
-				<div class="text1">
+		<div class="popup">
+			<div class="body_popup">
+				<div class="popupRight">
 					<h1 class="modals_header">Верно!</h1><br/>
-					<div class="bOk"><button id="bOk1" class="butOk" type="button">ОК</button></div>
+					{% if solution['is_passbacked'] != 'False' %}
+						<div class="textSend">Ответ отправлен на платформу</div> 
+					{% else %}
+						<div class="textSend">Ответ не отправлен на платформу</div> 
+					{% endif %}
 				</div>
 			</div>
 		</div>
 	{% else %}
-		<div class="pop-up2">
-			<div class="body_pop-up">
-				<div class="text2">
+		<div class="popup">
+			<div class="body_popup">
+				<div class="popupWrong">
 					<h1 class="modals_header">Неверно! Попробуйте еще раз.</h1><br/>
-					<div class="bOk"><button id="bOk2" class="butOk" type="button">ОК</button></div>
+					{% if solution['is_passbacked'] != 'False' %}
+						<div class="textSend">Ответ отправлен на платформу, осталось попыток: &nbsp;<b>{{attempts}}</b></div> 
+					{% else %}
+						<div class="textSend">Ответ не отправлен на платформу</div> 
+					{% endif %}
 				</div>
 			</div>
 		</div>
 	{% endif %}
-{% endblock %}
+</body>
+</html>

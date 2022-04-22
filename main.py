@@ -62,29 +62,33 @@ def index(task_id):
 @app.route('/<task_id>/send/solution/', methods=['GET'])
 def send_solution(task_id):
 	user = check_auth()
-	#answer = int(request.args.get('answer', 0))
 	answer = request.args.get('answer', 0)
+	if(answer != '1'):		#если ответ неправильный, уменьшить оставшиеся попытки
+		dbase.update_user_attempts(session['session_id'])
+
 	solution_id = str(uuid4())
 	dbase.add_solution(solution_id=solution_id, user_id=session['session_id'], task_id=task_id, score=answer,
 		passback_params=user['tasks'].get(task_id)['passback_params'])
-	return redirect(url_for('get_user_solution', solution_id=solution_id))
+
+	solution = dbase.get_solution(solution_id)
+	print('solution from /solution/<solution_id>:\n', solution, '\n')
+	if solution:
+		put_unsend_result()
+		return redirect(url_for('get_user_solution', solution_id=solution_id))
+	else:
+		abort(404, 'Такого задания нет')
 
 @app.route('/solution/<solution_id>', methods=['GET'])
 def get_user_solution(solution_id):
 	user = check_auth()
 	solution = dbase.get_solution(solution_id)
-	print('solution from /solution/<solution_id>:\n', solution, '\n')
-	if solution:
-		put_unsend_result()
-		return make_response(render_template('solution.html', solution_id=solution_id, solution=solution))
-	else:
-		abort(404, 'Такого задания нет')
+	attempts = dbase.get_user_attempts(session['session_id'])
+	return make_response(render_template('solution.html', solution_id=solution_id, solution=solution, attempts=attempts))
 
 #главный роут, на который будет приходить пост запрос от lms
 @app.route('/lti', methods=['POST'])
 def lti_route():
 	params = request.form	#извлечение информации из запроса (все что дала нам lms)
-	print(params)
 	consumer_secret = dbase.get_secret(params.get('oauth_consumer_key', ''))
 	request_info = dict( 
 		headers=dict(request.headers),
@@ -109,7 +113,10 @@ def lti_route():
 		dbase.add_session(user_id, task_id, params_for_passback, role)	
 		session['session_id'] = user_id	#сохраняем в запросе уник идентификатор
 
-		return redirect(url_for('index', task_id=task_id))
+		if(dbase.get_user_attempts(user_id) > 0):	
+			return redirect(url_for('index', task_id=task_id))
+		else:
+			abort(403, 'Попытки закончились')
 	else:
 		abort(403, 'check_request не прошел')
 
