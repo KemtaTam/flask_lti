@@ -103,6 +103,15 @@ class FDataBase():
 			print("Ошибка обновления попыток в БД:\n " + str(e) + '\n')
 			return False
 
+	def get_user_fullname(self, user_id):
+		try:
+			self.__cur.execute(f"SELECT name from users WHERE user_id LIKE '{user_id}'")
+			res = self.__cur.fetchone()
+			return res[0]
+		except sqlite3.Error as e:
+			print("Ошибка получения имени юзера в БД:\n " + str(e) + '\n')
+			return False
+
 	def get_session(self, session_id): 	
 		try:
 			self.__cur.execute("SELECT task, lis_outcome_service_url, lis_result_sourcedid, oauth_consumer_key, admin \

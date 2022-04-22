@@ -17,8 +17,6 @@ app.config.from_object(__name__) #загружаем конфигурацию и
 #переопределим путь к бд
 #свойство root_path ссылается на текущий рабочий каталог данного приложения
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'database.db')))	
-
-name = ''
 		
 #фунция, которая будет создавать файл database.db и отсутствующие таблицы
 def create_db():
@@ -53,6 +51,7 @@ def index_test():
 @app.route('/<task_id>', methods=['GET'])
 def index(task_id):
 	user = check_auth()
+	name = dbase.get_user_fullname(session['session_id']).split(' ')[1]
 	if check_task_access(task_id):  
 		return make_response(render_template('index.html', task_id=task_id, name=name))
 	else:
@@ -63,7 +62,7 @@ def index(task_id):
 def send_solution(task_id):
 	user = check_auth()
 	answer = request.args.get('answer', 0)
-	if(answer != '1'):		#если ответ неправильный, уменьшить оставшиеся попытки
+	if(answer != '1' and not check_admin()):		#если ответ неправильный, уменьшить оставшиеся попытки
 		dbase.update_user_attempts(session['session_id'])
 
 	solution_id = str(uuid4())
@@ -106,8 +105,6 @@ def lti_route():
 		role = utils.get_role(params)
 		#начинаем доставать параметры для отправки оценок на lms
 		params_for_passback = utils.extract_passback_params(params)
-		global name
-		name = utils.get_person_name(params)
 		
 		dbase.add_user(user_id, fullname, email)
 		dbase.add_session(user_id, task_id, params_for_passback, role)	
