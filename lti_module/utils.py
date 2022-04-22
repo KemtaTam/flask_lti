@@ -1,7 +1,7 @@
 TITLE = 'context_title'
 RETURN_URL = 'launch_presentation_return_url'
 USERNAME = 'ext_user_username'
-PERSON_NAME = 'lis_person_name_full'
+PERSON_NAME = 'lis_person_name_given'
 ROLES = 'roles'
 ADMIN_ROLE = 'Instructor'
 USER_ID = 'user_id'

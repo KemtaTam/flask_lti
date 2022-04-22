@@ -3,7 +3,6 @@ from uuid import uuid4
 import sqlite3
 import os
 from FDataBase import FDataBase
-from pathlib import Path
 
 from lti_module.check_request import check_request
 from lti_module import utils
@@ -18,6 +17,8 @@ app.config.from_object(__name__) #загружаем конфигурацию и
 #переопределим путь к бд
 #свойство root_path ссылается на текущий рабочий каталог данного приложения
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'database.db')))	
+
+name = ''
 		
 #фунция, которая будет создавать файл database.db и отсутствующие таблицы
 def create_db():
@@ -52,8 +53,8 @@ def index_test():
 @app.route('/<task_id>', methods=['GET'])
 def index(task_id):
 	user = check_auth()
-	if check_task_access(task_id):  # == user['tasks'].get(task_id)
-		return make_response(render_template('index.html', task_id=task_id))	#после этого def index(task_id): вызывается 2й раз?
+	if check_task_access(task_id):  
+		return make_response(render_template('index.html', task_id=task_id, name=name))
 	else:
 		abort(401, f"You don't have access to task_id={task_id}. Allowed tasks: {list(user['tasks'].keys())}")
 
@@ -66,7 +67,6 @@ def send_solution(task_id):
 	solution_id = str(uuid4())
 	dbase.add_solution(solution_id=solution_id, user_id=session['session_id'], task_id=task_id, score=answer,
 		passback_params=user['tasks'].get(task_id)['passback_params'])
-	
 	return redirect(url_for('get_user_solution', solution_id=solution_id))
 
 @app.route('/solution/<solution_id>', methods=['GET'])
@@ -84,6 +84,7 @@ def get_user_solution(solution_id):
 @app.route('/lti', methods=['POST'])
 def lti_route():
 	params = request.form	#извлечение информации из запроса (все что дала нам lms)
+	print(params)
 	consumer_secret = dbase.get_secret(params.get('oauth_consumer_key', ''))
 	request_info = dict( 
 		headers=dict(request.headers),
@@ -101,6 +102,8 @@ def lti_route():
 		role = utils.get_role(params)
 		#начинаем доставать параметры для отправки оценок на lms
 		params_for_passback = utils.extract_passback_params(params)
+		global name
+		name = utils.get_person_name(params)
 		
 		dbase.add_user(user_id, fullname, email)
 		dbase.add_session(user_id, task_id, params_for_passback, role)	

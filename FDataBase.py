@@ -30,7 +30,8 @@ class FDataBase():
 			# Модуль sqlite3 не позволяет делиться подключением между потоками. 
 			# Если попытаться сделать это, то можно получить исключение.
 			#методу connect передаем путь, в котором расположена бд
-			conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"), check_same_thread=False)	# *************************
+			#check_same_thread - использование нескольких потоков,
+			conn = sqlite3.connect(os.path.join(Path.cwd(), "database.db"), check_same_thread=False)	# *******************
 			print('Путь к бд: ', os.path.join(Path.cwd(), "database.db"), '\n')	
 			return conn	#возвращает установленное соединение
 		except sqlite3.Error as e:
@@ -52,7 +53,7 @@ class FDataBase():
 		# Если это сделать, то будет ошибка.
 			self.__cur = db.cursor()
 
-	def is_key_valid(self, key):	#*****************************
+	def is_key_valid(self, key):	
 		try:
 			self.__cur.execute("SELECT key from keysecret")
 			res = self.__cur.fetchone()
